@@ -10,7 +10,7 @@ Console.WriteLine("Kafka Producer");
 var kafkaService = new KafkaService();
 var topicName = "use-case-3-topic";
 await kafkaService.CreateTopicAsync(topicName);
-await kafkaService.SendComplexMessageWithIntKey(topicName);
+await kafkaService.SendComplexMessageWithIntKeyAndHeader(topicName);
 
 
 Console.WriteLine("Mesajlar gönderilmiştir.");

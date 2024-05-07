@@ -1,4 +1,5 @@
-﻿using Confluent.Kafka;
+﻿using System.Text;
+using Confluent.Kafka;
 using Kafka.Consumer.Events;
 
 namespace Kafka.Consumer
@@ -76,6 +77,51 @@ namespace Kafka.Consumer
 
                 if (consumeResult != null)
                 {
+                    var orderCreatedEvent = consumeResult.Message.Value;
+
+                    Console.WriteLine(
+                        $"gelen mesaj : {orderCreatedEvent.UserId} - {orderCreatedEvent.OrderCode} - {orderCreatedEvent.TotalPrice}");
+                }
+
+                await Task.Delay(10);
+            }
+        }
+
+
+        internal async Task ConsumeComplexMessageWithIntKeyAndHeader(string topicName)
+        {
+            var config = new ConsumerConfig()
+            {
+                BootstrapServers = "localhost:9094",
+                GroupId = "use-case-2-group-1",
+                AutoOffsetReset = AutoOffsetReset.Earliest
+            };
+
+            var consumer = new ConsumerBuilder<int, OrderCreatedEvent>(config)
+                .SetValueDeserializer(new CustomValueDeserializer<OrderCreatedEvent>()).Build();
+            consumer.Subscribe(topicName);
+
+            while (true)
+            {
+                var consumeResult = consumer.Consume(5000);
+
+                if (consumeResult != null)
+                {
+                    var correlationId =
+                        Encoding.UTF8.GetString(consumeResult.Message.Headers.GetLastBytes("correlation_id"));
+
+                    var version = Encoding.UTF8.GetString(consumeResult.Message.Headers.GetLastBytes("version"));
+
+
+                    // 2. yol
+                    //var correlationId2 = consumeResult.Message.Headers[0].GetValueBytes();
+
+                    //var version2 = consumeResult.Message.Headers[1].GetValueBytes();
+
+
+                    Console.WriteLine($"headers: correlation_id:{correlationId},version:{version}");
+
+
                     var orderCreatedEvent = consumeResult.Message.Value;
 
                     Console.WriteLine(
