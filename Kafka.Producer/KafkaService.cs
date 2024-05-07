@@ -161,5 +161,41 @@ namespace Kafka.Producer
                 await Task.Delay(10);
             }
         }
+
+
+        internal async Task SendComplexMessageWithComplexKey(string topicName)
+        {
+            var config = new ProducerConfig() { BootstrapServers = "localhost:9094" };
+
+            using var producer = new ProducerBuilder<MessageKey, OrderCreatedEvent>(config)
+                .SetValueSerializer(new CustomValueSerializer<OrderCreatedEvent>())
+                .SetKeySerializer(new CustomKeySerializer<MessageKey>())
+                .Build();
+
+
+            foreach (var item in Enumerable.Range(1, 3))
+            {
+                var orderCreatedEvent = new OrderCreatedEvent()
+                    { OrderCode = Guid.NewGuid().ToString(), TotalPrice = item * 100, UserId = item };
+
+
+                var message = new Message<MessageKey, OrderCreatedEvent>()
+                {
+                    Value = orderCreatedEvent,
+                    Key = new MessageKey("key1 value", "key2 value"),
+                };
+
+                var result = await producer.ProduceAsync(topicName, message);
+
+
+                foreach (var propertyInfo in result.GetType().GetProperties())
+                {
+                    Console.WriteLine($"{propertyInfo.Name} : {propertyInfo.GetValue(result)}");
+                }
+
+                Console.WriteLine("-----------------------------------");
+                await Task.Delay(10);
+            }
+        }
     }
 }
