@@ -76,7 +76,6 @@ namespace Kafka.Consumer
 
                 if (consumeResult != null)
                 {
-                    
                     var orderCreatedEvent = consumeResult.Message.Value;
 
                     Console.WriteLine(

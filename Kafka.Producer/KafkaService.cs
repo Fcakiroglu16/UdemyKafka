@@ -98,13 +98,12 @@ namespace Kafka.Producer
             {
                 var orderCreatedEvent = new OrderCreatedEvent()
                     { OrderCode = Guid.NewGuid().ToString(), TotalPrice = item * 100, UserId = item };
-               
+
 
                 var message = new Message<int, OrderCreatedEvent>()
                 {
                     Value = orderCreatedEvent,
                     Key = item,
-          
                 };
 
                 var result = await producer.ProduceAsync(topicName, message);
