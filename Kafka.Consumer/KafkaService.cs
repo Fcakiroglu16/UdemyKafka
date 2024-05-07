@@ -1,9 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Confluent.Kafka;
+﻿using Confluent.Kafka;
+using Kafka.Consumer.Events;
 
 namespace Kafka.Consumer
 {
@@ -58,6 +54,36 @@ namespace Kafka.Consumer
                 }
 
                 await Task.Delay(500);
+            }
+        }
+
+        internal async Task ConsumeComplexMessageWithIntKey(string topicName)
+        {
+            var config = new ConsumerConfig()
+            {
+                BootstrapServers = "localhost:9094",
+                GroupId = "use-case-2-group-1",
+                AutoOffsetReset = AutoOffsetReset.Earliest
+            };
+
+            var consumer = new ConsumerBuilder<int, OrderCreatedEvent>(config)
+                .SetValueDeserializer(new CustomValueDeserializer<OrderCreatedEvent>()).Build();
+            consumer.Subscribe(topicName);
+
+            while (true)
+            {
+                var consumeResult = consumer.Consume(5000);
+
+                if (consumeResult != null)
+                {
+                    
+                    var orderCreatedEvent = consumeResult.Message.Value;
+
+                    Console.WriteLine(
+                        $"gelen mesaj : {orderCreatedEvent.UserId} - {orderCreatedEvent.OrderCode} - {orderCreatedEvent.TotalPrice}");
+                }
+
+                await Task.Delay(10);
             }
         }
     }
