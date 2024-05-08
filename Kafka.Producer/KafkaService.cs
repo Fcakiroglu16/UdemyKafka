@@ -16,9 +16,20 @@ namespace Kafka.Producer
 
             try
             {
+                //https://docs.confluent.io/platform/current/installation/configuration/topic-configs.html
+                var configs = new Dictionary<string, string>()
+                {
+                    { "message.timestamp.type", "LogAppendTime" }
+                };
+
+
                 await adminClient.CreateTopicsAsync(new[]
                 {
-                    new TopicSpecification() { Name = topicName, NumPartitions = 3, ReplicationFactor = 1 }
+                    new TopicSpecification()
+                    {
+                        Name = topicName, NumPartitions = 3, ReplicationFactor = 1,
+                        Configs = configs
+                    }
                 });
 
                 Console.WriteLine($"Topic({topicName}) oluştu.");
@@ -183,6 +194,43 @@ namespace Kafka.Producer
                 {
                     Value = orderCreatedEvent,
                     Key = new MessageKey("key1 value", "key2 value"),
+                };
+
+                var result = await producer.ProduceAsync(topicName, message);
+
+
+                foreach (var propertyInfo in result.GetType().GetProperties())
+                {
+                    Console.WriteLine($"{propertyInfo.Name} : {propertyInfo.GetValue(result)}");
+                }
+
+                Console.WriteLine("-----------------------------------");
+                await Task.Delay(10);
+            }
+        }
+
+
+        internal async Task SendMessageWithTimestamp(string topicName)
+        {
+            var config = new ProducerConfig() { BootstrapServers = "localhost:9094" };
+
+            using var producer = new ProducerBuilder<MessageKey, OrderCreatedEvent>(config)
+                .SetValueSerializer(new CustomValueSerializer<OrderCreatedEvent>())
+                .SetKeySerializer(new CustomKeySerializer<MessageKey>())
+                .Build();
+
+
+            foreach (var item in Enumerable.Range(1, 3))
+            {
+                var orderCreatedEvent = new OrderCreatedEvent()
+                    { OrderCode = Guid.NewGuid().ToString(), TotalPrice = item * 100, UserId = item };
+
+
+                var message = new Message<MessageKey, OrderCreatedEvent>()
+                {
+                    Value = orderCreatedEvent,
+                    Key = new MessageKey("key1 value", "key2 value"),
+                    //Timestamp = new Timestamp(new DateTime(2012,02,02))
                 };
 
                 var result = await producer.ProduceAsync(topicName, message);
