@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using System.Globalization;
+using System.Linq.Expressions;
 using System.Text;
 using Confluent.Kafka;
 using Confluent.Kafka.Admin;
@@ -97,6 +98,39 @@ namespace Kafka.Producer
                 Console.WriteLine(e.Message);
             }
         }
+
+
+        internal async Task CreateTopicRetryWithClusterAsync(string topicName)
+        {
+            using var adminClient = new AdminClientBuilder(new AdminClientConfig()
+            {
+                BootstrapServers = "localhost:7000,localhost:7001,localhost:7002"
+            }).Build();
+
+            try
+            {
+                //https://docs.confluent.io/platform/current/installation/configuration/topic-configs.html#min-insync-replicas
+                var configs = new Dictionary<string, string>()
+                {
+                    { "min.insync.replicas", "3" }
+                };
+
+                await adminClient.CreateTopicsAsync(new[]
+                {
+                    new TopicSpecification()
+                    {
+                        Name = topicName, NumPartitions = 6, ReplicationFactor = 3, Configs = configs
+                    }
+                });
+
+                Console.WriteLine($"Topic({topicName}) oluştu.");
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.Message);
+            }
+        }
+
 
         internal async Task SendSimpleMessageWithNullKey(string topicName)
         {
@@ -391,6 +425,54 @@ namespace Kafka.Producer
                 Console.WriteLine("-----------------------------------");
                 await Task.Delay(10);
             }
+        }
+
+        internal async Task SendMessageWithRetryToCluster(string topicName)
+        {
+            Task.Run(async () =>
+            {
+                Stopwatch stopwatch = new Stopwatch();
+                stopwatch.Start();
+                while (true)
+                {
+                    TimeSpan timeSpan = TimeSpan.FromSeconds(Convert.ToInt32(stopwatch.Elapsed.TotalSeconds));
+                    Console.Write(timeSpan.ToString("c"));
+                    Console.Write('\r');
+
+
+                    await Task.Delay(1000);
+                }
+            });
+
+            var config = new ProducerConfig()
+            {
+                BootstrapServers = "localhost:7000,localhost:7001,localhost:7002", Acks = Acks.All,
+                //MessageTimeoutMs = 6000,
+                MessageSendMaxRetries = 6,
+                RetryBackoffMs = 2000,
+                RetryBackoffMaxMs = 2000
+            };
+
+
+            using var producer = new ProducerBuilder<Null, string>(config).Build();
+
+
+            var message = new Message<Null, string>()
+            {
+                Value = $"Mesaj 1"
+            };
+
+
+            var result = await producer.ProduceAsync(topicName, message);
+
+
+            foreach (var propertyInfo in result.GetType().GetProperties())
+            {
+                Console.WriteLine($"{propertyInfo.Name} : {propertyInfo.GetValue(result)}");
+            }
+
+            Console.WriteLine("-----------------------------------");
+            await Task.Delay(10);
         }
     }
 }
