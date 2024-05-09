@@ -12,19 +12,24 @@ namespace Kafka.Producer
         {
             using var adminClient = new AdminClientBuilder(new AdminClientConfig()
             {
-                BootstrapServers = "localhost:9094"
+                BootstrapServers = "localhost:7000"
             }).Build();
 
             try
             {
+                var config = new Dictionary<string, string>()
+                {
+                    { "min.insync.replicas", "2" }
+                };
+
+
                 await adminClient.CreateTopicsAsync(new[]
                 {
                     new TopicSpecification()
                     {
-                        Name = topicName, NumPartitions = 6, ReplicationFactor = 1
+                        Name = topicName, NumPartitions = 6, ReplicationFactor = 3, Configs = config
                     }
                 });
-
                 Console.WriteLine($"Topic({topicName}) oluştu.");
             }
             catch (Exception e)
@@ -334,6 +339,69 @@ namespace Kafka.Producer
                 Console.WriteLine("-----------------------------------");
                 await Task.Delay(10);
             }
+        }
+
+
+        internal async Task SendMessageWithRetry(string topicName)
+        {
+            var config = new ProducerConfig()
+                { BootstrapServers = "localhost:7000", Acks = Acks.All };
+
+
+            // MessageTimeoutMs=3000;
+            //MessageSendMaxRetries = 2 
+            //RetryBackoffMs = 1000
+
+            using var producer = new ProducerBuilder<Null, string>(config).Build();
+
+            var message = new Message<Null, string>()
+            {
+                Value = $"Mesaj {DateTime.Now}"
+            };
+
+
+            var result = await producer.ProduceAsync(topicName, message);
+
+            foreach (var propertyInfo in result.GetType().GetProperties())
+            {
+                Console.WriteLine($"{propertyInfo.Name} : {propertyInfo.GetValue(result)}");
+            }
+
+            //while (true)
+            //{
+            //    var message = new Message<Null, string>()
+            //    {
+            //        Value = $"Mesaj {DateTime.Now}"
+            //    };
+
+            //    // you can write exit with args
+
+            //    if (Console.ReadLine() == "send")
+            //    {
+            //        var topicPartition = new TopicPartition("topicName", new Partition(1));
+
+            //        try
+            //        {
+            //            var result = await producer.ProduceAsync(topicPartition, message);
+
+            //            foreach (var propertyInfo in result.GetType().GetProperties())
+            //            {
+            //                Console.WriteLine($"{propertyInfo.Name} : {propertyInfo.GetValue(result)}");
+            //            }
+            //        }
+            //        catch (Exception e)
+            //        {
+            //            Console.WriteLine($"hata var :{e.Message}");
+            //        }
+
+
+            //        Console.WriteLine("-----------------------------------");
+            //    }
+            //    else
+            //    {
+            //        break;
+            //    }
+            //}
         }
     }
 }
