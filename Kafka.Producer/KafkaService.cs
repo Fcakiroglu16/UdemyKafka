@@ -1,4 +1,5 @@
-﻿using System.Globalization;
+﻿using System.Diagnostics;
+using System.Globalization;
 using System.Text;
 using Confluent.Kafka;
 using Confluent.Kafka.Admin;
@@ -60,6 +61,32 @@ namespace Kafka.Producer
                     new TopicSpecification()
                     {
                         Name = topicName, NumPartitions = 6, ReplicationFactor = 1, Configs = configs
+                    }
+                });
+
+                Console.WriteLine($"Topic({topicName}) oluştu.");
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.Message);
+            }
+        }
+
+
+        internal async Task CreateTopicWithClusterAsync(string topicName)
+        {
+            using var adminClient = new AdminClientBuilder(new AdminClientConfig()
+            {
+                BootstrapServers = "localhost:7000,localhost:7001,localhost:7002"
+            }).Build();
+
+            try
+            {
+                await adminClient.CreateTopicsAsync(new[]
+                {
+                    new TopicSpecification()
+                    {
+                        Name = topicName, NumPartitions = 6, ReplicationFactor = 3
                     }
                 });
 
@@ -311,6 +338,36 @@ namespace Kafka.Producer
         internal async Task SendMessageWithAck(string topicName)
         {
             var config = new ProducerConfig() { BootstrapServers = "localhost:9094", Acks = Acks.All };
+
+            using var producer = new ProducerBuilder<Null, string>(config).Build();
+
+
+            foreach (var item in Enumerable.Range(1, 10))
+            {
+                var message = new Message<Null, string>()
+                {
+                    Value = $"Mesaj {item}"
+                };
+
+
+                var result = await producer.ProduceAsync(topicName, message);
+
+
+                foreach (var propertyInfo in result.GetType().GetProperties())
+                {
+                    Console.WriteLine($"{propertyInfo.Name} : {propertyInfo.GetValue(result)}");
+                }
+
+                Console.WriteLine("-----------------------------------");
+                await Task.Delay(10);
+            }
+        }
+
+
+        internal async Task SendMessageToCluster(string topicName)
+        {
+            var config = new ProducerConfig()
+                { BootstrapServers = "localhost:7000,localhost:7001,localhost:7002", Acks = Acks.All };
 
             using var producer = new ProducerBuilder<Null, string>(config).Build();
 

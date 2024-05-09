@@ -8,9 +8,9 @@ Console.WriteLine("Kafka Producer");
 
 
 var kafkaService = new KafkaService();
-var topicName = "retention2-topic";
-await kafkaService.CreateTopicWithRetentionAsync(topicName);
-await kafkaService.SendMessageWithAck(topicName);
+var topicName = "mycluster2-topic";
+await kafkaService.CreateTopicWithClusterAsync(topicName);
+await kafkaService.SendMessageToCluster(topicName);
 
-
+Console.ReadLine();
 Console.WriteLine("Mesajlar gönderilmiştir.");
