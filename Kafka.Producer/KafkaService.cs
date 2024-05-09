@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System.Globalization;
+using System.Text;
 using Confluent.Kafka;
 using Confluent.Kafka.Admin;
 using Kafka.Producer.Events;
@@ -32,6 +33,43 @@ namespace Kafka.Producer
             }
         }
 
+        internal async Task CreateTopicWithRetentionAsync(string topicName)
+        {
+            using var adminClient = new AdminClientBuilder(new AdminClientConfig()
+            {
+                BootstrapServers = "localhost:9094"
+            }).Build();
+
+            try
+            {
+                // topic link : https://docs.confluent.io/platform/current/installation/configuration/topic-configs.html
+
+                TimeSpan day30Span = TimeSpan.FromDays(30);
+
+
+                var configs = new Dictionary<string, string>()
+                {
+                    //{"retention.bytes","10000"} // topic partition byte cinsinden 10kb
+                    //{ "retention.ms", "-1" } // ömür boyu kafka da kalır
+                    { "retention.ms", day30Span.TotalMicroseconds.ToString() } // 30 gün
+                };
+
+
+                await adminClient.CreateTopicsAsync(new[]
+                {
+                    new TopicSpecification()
+                    {
+                        Name = topicName, NumPartitions = 6, ReplicationFactor = 1, Configs = configs
+                    }
+                });
+
+                Console.WriteLine($"Topic({topicName}) oluştu.");
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.Message);
+            }
+        }
 
         internal async Task SendSimpleMessageWithNullKey(string topicName)
         {

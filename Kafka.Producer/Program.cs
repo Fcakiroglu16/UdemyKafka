@@ -8,8 +8,8 @@ Console.WriteLine("Kafka Producer");
 
 
 var kafkaService = new KafkaService();
-var topicName = "ack-topic";
-await kafkaService.CreateTopicAsync(topicName);
+var topicName = "retention2-topic";
+await kafkaService.CreateTopicWithRetentionAsync(topicName);
 await kafkaService.SendMessageWithAck(topicName);
 
 
