@@ -3,9 +3,9 @@
 using Kafka.Consumer;
 
 Console.WriteLine("Kafka Consumer 1");
-var topicName = "use-case-3-topic";
+var topicName = "use-case-4-topic";
 var kafkaService = new KafkaService();
 
-await kafkaService.ConsumeMessageWithTimestamp(topicName);
+await kafkaService.ConsumeMessageFromSpecificPartition(topicName);
 
 Console.ReadLine();

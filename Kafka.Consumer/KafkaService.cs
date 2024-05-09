@@ -198,5 +198,31 @@ namespace Kafka.Consumer
                 await Task.Delay(10);
             }
         }
+
+
+        internal async Task ConsumeMessageFromSpecificPartition(string topicName)
+        {
+            var config = new ConsumerConfig()
+            {
+                BootstrapServers = "localhost:9094",
+                GroupId = "group-1",
+                AutoOffsetReset = AutoOffsetReset.Earliest
+            };
+
+            var consumer = new ConsumerBuilder<Null, string>(config).Build();
+            //consumer.Subscribe(topicName);
+            consumer.Assign(new TopicPartition(topicName, new Partition(2)));
+            while (true)
+            {
+                var consumeResult = consumer.Consume(5000);
+
+                if (consumeResult != null)
+                {
+                    Console.WriteLine($"Message Timestamp : {consumeResult.Message.Timestamp.UtcDateTime}");
+                }
+
+                await Task.Delay(10);
+            }
+        }
     }
 }

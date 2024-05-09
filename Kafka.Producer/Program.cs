@@ -8,9 +8,9 @@ Console.WriteLine("Kafka Producer");
 
 
 var kafkaService = new KafkaService();
-var topicName = "use-case-3-topic";
+var topicName = "use-case-4-topic";
 await kafkaService.CreateTopicAsync(topicName);
-await kafkaService.SendMessageWithTimestamp(topicName);
+await kafkaService.SendMessageToSpecificPartition(topicName);
 
 
 Console.WriteLine("Mesajlar gönderilmiştir.");
