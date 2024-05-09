@@ -1,4 +1,5 @@
-﻿using System.Globalization;
+﻿using System.Diagnostics;
+using System.Globalization;
 using System.Text;
 using Confluent.Kafka;
 using Confluent.Kafka.Admin;
@@ -344,8 +345,22 @@ namespace Kafka.Producer
 
         internal async Task SendMessageWithRetry(string topicName)
         {
+            Task.Run(async () =>
+            {
+                Stopwatch stopwatch = new Stopwatch();
+                stopwatch.Start();
+                while (true)
+                {
+                    TimeSpan timeSpan = TimeSpan.FromSeconds(Convert.ToInt32(stopwatch.Elapsed.TotalSeconds));
+                    Console.Write(timeSpan.ToString("c"));
+                    Console.Write('\r');
+                    await Task.Delay(1000);
+                }
+            });
+
+
             var config = new ProducerConfig()
-                { BootstrapServers = "localhost:7000", Acks = Acks.All };
+                { BootstrapServers = "localhost:7000", Acks = Acks.All, MessageTimeoutMs = 5000 };
 
 
             // MessageTimeoutMs=3000;
@@ -361,6 +376,7 @@ namespace Kafka.Producer
 
 
             var result = await producer.ProduceAsync(topicName, message);
+
 
             foreach (var propertyInfo in result.GetType().GetProperties())
             {
