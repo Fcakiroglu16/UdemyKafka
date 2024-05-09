@@ -250,5 +250,42 @@ namespace Kafka.Consumer
                 await Task.Delay(10);
             }
         }
+
+
+        internal async Task ConsumeMessageWithAct(string topicName)
+        {
+            var config = new ConsumerConfig()
+            {
+                BootstrapServers = "localhost:9094",
+                GroupId = "group-4",
+                AutoOffsetReset = AutoOffsetReset.Earliest,
+                EnableAutoCommit = false
+            };
+
+            var consumer = new ConsumerBuilder<Null, string>(config).Build();
+            consumer.Subscribe(topicName);
+
+            while (true)
+            {
+                var consumeResult = consumer.Consume(5000);
+
+                if (consumeResult != null)
+                {
+                    try
+                    {
+                        Console.WriteLine($"Message Timestamp : {consumeResult.Message.Value}");
+
+                        consumer.Commit(consumeResult);
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine(e);
+                        throw;
+                    }
+                }
+
+                await Task.Delay(10);
+            }
+        }
     }
 }
