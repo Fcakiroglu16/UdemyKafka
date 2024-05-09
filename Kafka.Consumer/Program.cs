@@ -6,6 +6,6 @@ Console.WriteLine("Kafka Consumer 1");
 var topicName = "use-case-4-topic";
 var kafkaService = new KafkaService();
 
-await kafkaService.ConsumeMessageFromSpecificPartition(topicName);
+await kafkaService.ConsumeMessageFromSpecificPartitionOffset(topicName);
 
 Console.ReadLine();

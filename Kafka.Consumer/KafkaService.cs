@@ -218,7 +218,33 @@ namespace Kafka.Consumer
 
                 if (consumeResult != null)
                 {
-                    Console.WriteLine($"Message Timestamp : {consumeResult.Message.Timestamp.UtcDateTime}");
+                    Console.WriteLine($"Message Timestamp : {consumeResult.Message.Value}");
+                }
+
+                await Task.Delay(10);
+            }
+        }
+
+
+        internal async Task ConsumeMessageFromSpecificPartitionOffset(string topicName)
+        {
+            var config = new ConsumerConfig()
+            {
+                BootstrapServers = "localhost:9094",
+                GroupId = "group-4",
+                AutoOffsetReset = AutoOffsetReset.Earliest
+            };
+
+            var consumer = new ConsumerBuilder<Null, string>(config).Build();
+            //consumer.Subscribe(topicName);
+            consumer.Assign(new TopicPartitionOffset(topicName, 2, 0));
+            while (true)
+            {
+                var consumeResult = consumer.Consume(5000);
+
+                if (consumeResult != null)
+                {
+                    Console.WriteLine($"Message Timestamp : {consumeResult.Message.Value}");
                 }
 
                 await Task.Delay(10);
