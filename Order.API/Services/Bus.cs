@@ -26,7 +26,7 @@ namespace Order.API.Services
             };
 
             var result = await producer.ProduceAsync(topicOrQueueName, message);
-
+        
             return result.Status == PersistenceStatus.Persisted;
         }
 
