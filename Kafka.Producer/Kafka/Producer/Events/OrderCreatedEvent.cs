@@ -18,10 +18,9 @@ namespace Kafka.Producer.Events
 	{
 		public static global::Avro.Schema _SCHEMA = global::Avro.Schema.Parse("{\"type\":\"record\",\"name\":\"OrderCreatedEvent\",\"namespace\":\"Kafka.Producer.Events\",\"" +
 				"fields\":[{\"name\":\"OrderId\",\"type\":\"string\"},{\"name\":\"CustomerId\",\"type\":\"string\"" +
-				"},{\"name\":\"Amount\",\"type\":\"double\"}]}");
+				"}]}");
 		private string _OrderId;
 		private string _CustomerId;
-		private double _Amount;
 		public virtual global::Avro.Schema Schema
 		{
 			get
@@ -51,24 +50,12 @@ namespace Kafka.Producer.Events
 				this._CustomerId = value;
 			}
 		}
-		public double Amount
-		{
-			get
-			{
-				return this._Amount;
-			}
-			set
-			{
-				this._Amount = value;
-			}
-		}
 		public virtual object Get(int fieldPos)
 		{
 			switch (fieldPos)
 			{
 			case 0: return this.OrderId;
 			case 1: return this.CustomerId;
-			case 2: return this.Amount;
 			default: throw new global::Avro.AvroRuntimeException("Bad index " + fieldPos + " in Get()");
 			};
 		}
@@ -78,7 +65,6 @@ namespace Kafka.Producer.Events
 			{
 			case 0: this.OrderId = (System.String)fieldValue; break;
 			case 1: this.CustomerId = (System.String)fieldValue; break;
-			case 2: this.Amount = (System.Double)fieldValue; break;
 			default: throw new global::Avro.AvroRuntimeException("Bad index " + fieldPos + " in Put()");
 			};
 		}

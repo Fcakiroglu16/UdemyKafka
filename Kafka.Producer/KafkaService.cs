@@ -62,8 +62,128 @@ internal class KafkaService
             var eventMessage = new OrderCreatedEvent
             {
                 OrderId = $"ORD-{i:D3}",
-                CustomerId = $"CUST-{i + 100}",
-                Amount = 199.99 + (i * 10)
+                CustomerId = $"CUST-{i + 100}"
+                //Amount = (float)(199.99 + (i * 10))
+            };
+
+            await producer.ProduceAsync("orders-topic", new Message<string, OrderCreatedEvent>
+            {
+                Key = eventMessage.OrderId,
+                Value = eventMessage
+            });
+
+            Console.WriteLine($"Message {i}/10 sent: {eventMessage.OrderId}");
+        }
+    }
+
+    internal async Task SendMessageV2()
+    {
+        // 1. Schema Registry istemcisini yapılandır
+        var schemaRegistryConfig = new SchemaRegistryConfig
+        {
+            Url = "http://localhost:8081"
+        };
+        using var schemaRegistry = new CachedSchemaRegistryClient(schemaRegistryConfig);
+
+        // 2. Producer'ı yapılandır
+        var producerConfig = new ProducerConfig { BootstrapServers = "localhost:9094" };
+
+        // 3. Producer'ı AvroSerializer ile oluştur
+        // Anahtar (Key) string, Değer (Value) ise OrderCreatedEvent nesnesi olacak
+        using var producer = new ProducerBuilder<string, OrderCreatedEvent>(producerConfig)
+            .SetValueSerializer(new AvroSerializer<OrderCreatedEvent>(schemaRegistry))
+            .Build();
+
+        // 4. Mesajı C# nesnesi olarak gönder
+
+        for (var i = 1; i <= 10; i++)
+        {
+            var eventMessage = new OrderCreatedEvent
+            {
+                OrderId = $"ORD-{i:D3}",
+                CustomerId = $"CUST-{i + 100}"
+                //Amount = 19
+            };
+
+            await producer.ProduceAsync("orders-topic", new Message<string, OrderCreatedEvent>
+            {
+                Key = eventMessage.OrderId,
+                Value = eventMessage
+            });
+
+            Console.WriteLine($"Message {i}/10 sent: {eventMessage.OrderId}");
+        }
+    }
+
+    internal async Task SendMessageV2Deleted()
+    {
+        // 1. Schema Registry istemcisini yapılandır
+        var schemaRegistryConfig = new SchemaRegistryConfig
+        {
+            Url = "http://localhost:8081"
+        };
+        using var schemaRegistry = new CachedSchemaRegistryClient(schemaRegistryConfig);
+
+        // 2. Producer'ı yapılandır
+        var producerConfig = new ProducerConfig { BootstrapServers = "localhost:9094" };
+
+        // 3. Producer'ı AvroSerializer ile oluştur
+        // Anahtar (Key) string, Değer (Value) ise OrderCreatedEvent nesnesi olacak
+        using var producer = new ProducerBuilder<string, OrderCreatedEvent>(producerConfig)
+            .SetValueSerializer(new AvroSerializer<OrderCreatedEvent>(schemaRegistry))
+            .Build();
+
+        // 4. Mesajı C# nesnesi olarak gönder
+
+        for (var i = 1; i <= 10; i++)
+        {
+            var eventMessage = new OrderCreatedEvent
+            {
+                OrderId = $"ORD-{i:D3}",
+                CustomerId = $"CUST-{i + 100}"
+                //Amount = 19
+            };
+
+            await producer.ProduceAsync("orders-topic", new Message<string, OrderCreatedEvent>
+            {
+                Key = eventMessage.OrderId,
+                Value = eventMessage
+            });
+
+            Console.WriteLine($"Message {i}/10 sent: {eventMessage.OrderId}");
+        }
+    }
+
+    internal async Task SendMessageV3()
+    {
+        // 1. Schema Registry istemcisini yapılandır
+        var schemaRegistryConfig = new SchemaRegistryConfig
+        {
+            Url = "http://localhost:8081"
+        };
+        using var schemaRegistry = new CachedSchemaRegistryClient(schemaRegistryConfig);
+
+        // 2. Producer'ı yapılandır
+        var producerConfig = new ProducerConfig { BootstrapServers = "localhost:9094" };
+
+        // 3. Producer'ı AvroSerializer ile oluştur
+        // Anahtar (Key) string, Değer (Value) ise OrderCreatedEvent nesnesi olacak
+        using var producer = new ProducerBuilder<string, OrderCreatedEvent>(producerConfig)
+            .SetValueSerializer(new AvroSerializer<OrderCreatedEvent>(schemaRegistry))
+            .Build();
+
+        // 4. Mesajı C# nesnesi olarak gönder
+
+        for (var i = 1; i <= 10; i++)
+        {
+            var eventMessage = new OrderCreatedEvent
+            {
+                OrderId = $"ORD-{i:D3}",
+                CustomerId = $"CUST-{i + 100}"
+                //Amount = 19,
+                //Description = "description",
+                ////orderDate yaz with date.now
+                //OrderDate = (int)DateTimeOffset.UtcNow.ToUnixTimeSeconds()
             };
 
             await producer.ProduceAsync("orders-topic", new Message<string, OrderCreatedEvent>

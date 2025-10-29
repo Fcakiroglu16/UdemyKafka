@@ -16,6 +16,7 @@
 
   <ItemGroup>
     <Folder Include="Events\" />
+    <Folder Include="Kafka\Producer\Events\" />
   </ItemGroup>
 
 </Project>
