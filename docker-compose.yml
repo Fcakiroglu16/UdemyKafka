@@ -1,31 +1,110 @@
-
-version: "3.8"
+﻿version: "3.8"
 
 services:
   kafka:
-    image: docker.io/bitnami/kafka:3.7
+    image: confluentinc/cp-kafka:7.6.0
+    container_name: kafka
     ports:
+      - "9092:9092"
       - "9094:9094"
-    volumes:
-      - "kafka_data:/bitnami"
     environment:
-      # KRaft settings
-      - KAFKA_CFG_NODE_ID=0
-      - KAFKA_CFG_PROCESS_ROLES=controller,broker
-      - KAFKA_CFG_CONTROLLER_QUORUM_VOTERS=0@kafka:9093
-      # Listeners
-      - KAFKA_CFG_LISTENERS=PLAINTEXT://:9092,CONTROLLER://:9093,EXTERNAL://:9094
-      - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://kafka:9092,EXTERNAL://localhost:9094
-      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=CONTROLLER:PLAINTEXT,EXTERNAL:PLAINTEXT,PLAINTEXT:PLAINTEXT
-      - KAFKA_CFG_CONTROLLER_LISTENER_NAMES=CONTROLLER
-      - KAFKA_CFG_INTER_BROKER_LISTENER_NAME=PLAINTEXT
+      # ======= KRaft Mode Ayarları =======
+      # KRaft: Kafka Raft, Kafka'nın Zookeeper'sız çalışmasını sağlar
+      # Apache Kafka 3.x ile gelen yeni consensus protokolü
+      
+      # Bu Kafka node'unun benzersiz ID'si (cluster içinde unique olmalı)
+      KAFKA_NODE_ID: 1
+      
+      # Bu node'un rolleri: hem broker (mesaj işler) hem controller (cluster yönetir)
+      # broker: Mesajları producer'lardan alır ve consumer'lara dağıtır
+      # controller: Cluster metadata'sını ve lider seçimlerini yönetir
+      KAFKA_PROCESS_ROLES: broker,controller
+      
+      # Controller quorum (çoğunluk) yapılandırması
+      # Format: node_id@hostname:port
+      # 1@kafka:9093 = ID'si 1 olan controller, kafka hostname'inde 9093 portunda
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+      
+      # Controller iletişimi için kullanılacak listener ismi
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      
+      # ======= Listener (Dinleyici) Ayarları =======
+      # Listener: Kafka'nın bağlantıları dinlediği network arayüzleri
+      
+      # Kafka'nın dinleyeceği tüm endpoint'ler
+      # PLAINTEXT://0.0.0.0:9092 - Container içi iletişim (şifreleme yok)
+      # CONTROLLER://0.0.0.0:9093 - Controller'lar arası iletişim
+      # EXTERNAL://0.0.0.0:9094 - Dışarıdan (localhost) erişim
+      # 0.0.0.0 = Tüm network interface'lerini dinle
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093,EXTERNAL://0.0.0.0:9094
+      
+      # Client'lara duyurulan adresler (client'lar bu adreslere bağlanır)
+      # PLAINTEXT://kafka:9092 - Docker network içinden bağlananlar için
+      # EXTERNAL://localhost:9094 - Host makinesinden bağlananlar için
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,EXTERNAL://localhost:9094
+      
+      # Her listener için güvenlik protokolü mapping
+      # PLAINTEXT: Şifreleme yok, kimlik doğrulama yok (development için)
+      # Production'da SSL veya SASL kullanılmalı
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,CONTROLLER:PLAINTEXT,EXTERNAL:PLAINTEXT
+      
+      # Kafka broker'lar arası iletişim için kullanılacak listener
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      
+      # ======= Cluster Ayarları =======
+      # KRaft mode için gerekli benzersiz cluster ID
+      # Bu ID, kafka-storage.sh random-uuid komutuyla üretilebilir
+      # Aynı cluster'daki tüm node'lar aynı CLUSTER_ID'ye sahip olmalı
+      CLUSTER_ID: MkU3OEVBNTcwNTJENDM2Qk
+      
+      # ======= Storage (Depolama) Ayarları =======
+      # Kafka'nın log dosyalarını (mesajları) saklayacağı dizin
+      # Mesajlar burada segment dosyaları olarak saklanır
+      KAFKA_LOG_DIRS: /var/lib/kafka/data
+      
+      # Offset topic için replication factor (kaç kopyası olacak)
+      # 1 = Tek replica (development için), production'da en az 3 olmalı
+      # Offset topic: Consumer'ların hangi mesajı okuduğunu takip eder
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      
+      # Transaction state log için replication factor
+      # Transaction: Birden fazla mesajı atomik olarak gönderme/okuma
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      
+      # Transaction log için minimum in-sync replica sayısı
+      # ISR (In-Sync Replica): Leader ile senkron olan replica'lar
+      # 1 = En az 1 replica senkron olmalı (development için)
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+    
+    volumes:
+      - kafka_data:/var/lib/kafka/data
+
+  schema-registry:
+    image: confluentinc/cp-schema-registry:7.6.0
+    container_name: schema-registry
+    ports:
+      - "8081:8081"
+    environment:
+      SCHEMA_REGISTRY_HOST_NAME: schema-registry
+      SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: kafka:9092
+      SCHEMA_REGISTRY_LISTENERS: http://0.0.0.0:8081
+    depends_on:
+      - kafka
+
   kafka-ui:
     container_name: kafka-ui
     image: provectuslabs/kafka-ui:v0.7.2
     ports:
-      - 8080:8080
+      - "8080:8080"
     environment:
       DYNAMIC_CONFIG_ENABLED: 'true'
+      KAFKA_CLUSTERS_0_NAME: local
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
+      KAFKA_CLUSTERS_0_SCHEMAREGISTRY: http://schema-registry:8081
+    depends_on:
+      - kafka
+      - schema-registry
+
 volumes:
   kafka_data:
     driver: local
