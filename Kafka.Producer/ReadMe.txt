@@ -8,36 +8,43 @@ cd Kafka.Producer
 avrogen -s Schemas\OrderCreatedEvent.avsc .
 
 
+//Stream Example
+
+CREATE STREAM order_created_stream (
+    OrderId VARCHAR,
+    CustomerId VARCHAR,
+    Amount DOUBLE
+) WITH (
+    KAFKA_TOPIC='order-created-events',
+    VALUE_FORMAT='AVRO'
+);
 
 
-Backward
-producer tarafında, yeni alanlar ekleyebilirsin, ancak mevcut alanları kaldıramazsın veya türlerini değiştiremezsin.
+SET 'auto.offset.reset' = 'earliest';
 
-Forward
-producter tarafında yeni bir alan ekliyorum ama nullable değil,backward hata veriyor, forward yaptığımda hata vermiyor
-
-
-
-
+CREATE STREAM high_value_orders AS
+SELECT *
+FROM order_created_stream
+WHERE Amount > 1000
+EMIT CHANGES;
 
 
 
 
+DROP STREAM HIGH_VALUE_ORDERS;
 
 
+//Table Example
 
-Producer açısındaın uyumluluk
+CREATE TABLE customer_total_orders AS
+SELECT
+    CustomerId,
+    COUNT(*) AS OrderCount,
+    SUM(Amount) AS TotalAmount
+FROM order_created_stream
+GROUP BY CustomerId
+EMIT CHANGES;
 
-
-Producer : var olan alanlarıdeğiştirmek, hem backward,hemde forward uyumluluk modlarında hata verir
-
-Backward
-Produecer : Senaryo 1: Alan Silmek (Başarılı ✅), Consumer :  hiçbir uyumluluk modunda v2 mesajlarını okuyamaz
-Producer :  Senaryo 2 : nullable olmayan alan eklemek (başarısız)
-producer :  Senaryo 3 : nullable alan eklemek (başarılı ✅), consumer : tüm uyumluluk modlarında v2 mesajlarını okuyabilir
-
-Forward
-Producer :  Senaryo 2 : nullable olmayan alan eklemek (başarılı),consumer : okuyabiliyor
   
 
 

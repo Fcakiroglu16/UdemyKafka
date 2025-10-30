@@ -62,11 +62,8 @@ internal class KafkaService
             var eventMessage = new OrderCreatedEvent
             {
                 OrderId = $"ORD-{i:D3}",
-                CustomerId = $"CUST-{i + 100}",
-                Description = i
-                //Description = $"Description for order {i}"
-                //X = "Extra field value"
-                //Amount = (float)(199.99 + (i * 10))
+                CustomerId = "abc", //$"CUST-{i + 100}",
+                Amount = i * 2 * 100
             };
 
             await producer.ProduceAsync("orders-topic", new Message<string, OrderCreatedEvent>

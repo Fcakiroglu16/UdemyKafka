@@ -91,6 +91,57 @@ services:
     depends_on:
       - kafka
 
+  ksqldb-server:
+    image: confluentinc/cp-ksqldb-server:7.6.0
+    container_name: ksqldb-server
+    ports:
+      - "8088:8088"
+    environment:
+      # ======= ksqlDB Server Ayarları =======
+      # ksqlDB sunucusunun dinleyeceği adres
+      KSQL_LISTENERS: http://0.0.0.0:8088
+      
+      # Kafka cluster'a bağlanmak için bootstrap server adresi
+      KSQL_BOOTSTRAP_SERVERS: kafka:9092
+      
+      # ksqlDB sorgu sonuçlarını saklamak için kullanılacak topic prefix'i
+      KSQL_KSQL_LOGGING_PROCESSING_TOPIC_NAME: ksqldb_processing_log
+      KSQL_KSQL_LOGGING_PROCESSING_TOPIC_AUTO_CREATE: 'true'
+      KSQL_KSQL_LOGGING_PROCESSING_STREAM_AUTO_CREATE: 'true'
+      
+      # Schema Registry entegrasyonu (Avro desteği için)
+      KSQL_KSQL_SCHEMA_REGISTRY_URL: http://schema-registry:8081
+      
+      # ksqlDB'nin dahili topic'leri için replication factor
+      # Development için 1, production'da en az 3 olmalı
+      KSQL_KSQL_INTERNAL_TOPIC_REPLICAS: 1
+      KSQL_KSQL_SINK_REPLICAS: 1
+      
+      # Streams ve Tables için default replication factor
+      KSQL_KSQL_STREAMS_REPLICATION_FACTOR: 1
+      
+      # Cache boyutu (stream processing performansı için)
+      KSQL_CACHE_MAX_BYTES_BUFFERING: 0
+      
+      # ksqlDB Service ID (cluster içinde unique olmalı)
+      KSQL_KSQL_SERVICE_ID: ksqldb_cluster_
+    depends_on:
+      - kafka
+      - schema-registry
+    volumes:
+      - ksqldb_data:/var/lib/ksqldb
+
+  ksqldb-cli:
+    image: confluentinc/cp-ksqldb-cli:7.6.0
+    container_name: ksqldb-cli
+    entrypoint: /bin/sh
+    tty: true
+    environment:
+      # CLI'ın bağlanacağı ksqlDB server adresi
+      KSQL_BOOTSTRAP_SERVERS: kafka:9092
+    depends_on:
+      - ksqldb-server
+
   kafka-ui:
     container_name: kafka-ui
     image: provectuslabs/kafka-ui:v0.7.2
@@ -101,10 +152,14 @@ services:
       KAFKA_CLUSTERS_0_NAME: local
       KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
       KAFKA_CLUSTERS_0_SCHEMAREGISTRY: http://schema-registry:8081
+      KAFKA_CLUSTERS_0_KSQLDBSERVER: http://ksqldb-server:8088
     depends_on:
       - kafka
       - schema-registry
+      - ksqldb-server
 
 volumes:
   kafka_data:
+    driver: local
+  ksqldb_data:
     driver: local

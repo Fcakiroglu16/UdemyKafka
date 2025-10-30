@@ -12,8 +12,8 @@
       "type": "string"
     },
     {
-      "name": "Description",
-      "type": "int"
+      "name": "Amount",
+      "type": "double"
 
     }
   ]
