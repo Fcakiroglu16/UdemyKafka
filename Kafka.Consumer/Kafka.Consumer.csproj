@@ -17,7 +17,6 @@
 
   <ItemGroup>
     <Folder Include="Events\" />
-    <Folder Include="Kafka\" />
   </ItemGroup>
 
 </Project>

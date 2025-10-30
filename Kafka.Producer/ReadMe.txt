@@ -12,4 +12,32 @@ avrogen -s Schemas\OrderCreatedEvent.avsc .
 
 Backward
 producer tarafında, yeni alanlar ekleyebilirsin, ancak mevcut alanları kaldıramazsın veya türlerini değiştiremezsin.
-consumer=> producer tarafında var olan bir alan kaldırılırsa, producer bu datayı kafkaya gönderebiliyor, ama consumer okuyamıyor.
+
+Forward
+producter tarafında yeni bir alan ekliyorum ama nullable değil,backward hata veriyor, forward yaptığımda hata vermiyor
+
+
+
+
+
+
+
+
+
+
+
+Producer açısındaın uyumluluk
+
+
+Producer : var olan alanlarıdeğiştirmek, hem backward,hemde forward uyumluluk modlarında hata verir
+
+Backward
+Produecer : Senaryo 1: Alan Silmek (Başarılı ✅), Consumer :  hiçbir uyumluluk modunda v2 mesajlarını okuyamaz
+Producer :  Senaryo 2 : nullable olmayan alan eklemek (başarısız)
+producer :  Senaryo 3 : nullable alan eklemek (başarılı ✅), consumer : tüm uyumluluk modlarında v2 mesajlarını okuyabilir
+
+Forward
+Producer :  Senaryo 2 : nullable olmayan alan eklemek (başarılı),consumer : okuyabiliyor
+  
+
+

@@ -12,8 +12,9 @@
       "type": "string"
     },
     {
-      "name": "Amount",
-      "type": "double"
+      "name": "Description",
+      "type": "string"
+
     }
   ]
 }

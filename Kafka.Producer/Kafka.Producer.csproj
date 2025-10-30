@@ -14,9 +14,4 @@
     <PackageReference Include="Confluent.SchemaRegistry.Serdes.Avro" Version="2.12.0" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Events\" />
-    <Folder Include="Kafka\Producer\Events\" />
-  </ItemGroup>
-
 </Project>

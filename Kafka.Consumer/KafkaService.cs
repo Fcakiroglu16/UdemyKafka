@@ -18,7 +18,7 @@ internal class KafkaService
         var consumerConfig = new ConsumerConfig
         {
             BootstrapServers = "localhost:9094",
-            GroupId = "order-processor",
+            GroupId = "order-processor7",
             AutoOffsetReset = AutoOffsetReset.Earliest
         };
 
@@ -38,7 +38,8 @@ internal class KafkaService
             // Veri otomatik olarak OrderCreatedEvent nesnesine dönüştü!
             var eventMessage = consumeResult.Message.Value;
 
-            Console.WriteLine($"Gelen Sipariş: {eventMessage.OrderId}, Müşteri: {eventMessage.CustomerId}");
+            Console.WriteLine(
+                $"Gelen Sipariş: {eventMessage.OrderId}, Müşteri: {eventMessage.CustomerId}, Açıklama: {eventMessage.Description}");
         }
     }
 }
