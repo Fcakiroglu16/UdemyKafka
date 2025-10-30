@@ -10,7 +10,8 @@ Console.WriteLine("Kafka Producer");
 
 
 var kafkaService = new KafkaService();
-await kafkaService.SendMessageAtLeastOnce();
-kafkaService.SendMessageAtMostOnce();
+//kafkaService.SendMessageAtMostOnce();
+//await kafkaService.SendMessageAtLeastOnce();
+
 await kafkaService.SendMessageExactlyOnce();
-Console.ReadLine();
+//Console.ReadLine();

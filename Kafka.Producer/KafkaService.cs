@@ -325,7 +325,7 @@ internal class KafkaService
                         Amount = i * 100
                     };
 
-                    await producer.ProduceAsync("orders-topic", new Message<string, OrderCreatedEvent>
+                    await producer.ProduceAsync("orders-topic-exactly-once", new Message<string, OrderCreatedEvent>
                     {
                         Key = eventMessage.OrderId,
                         Value = eventMessage

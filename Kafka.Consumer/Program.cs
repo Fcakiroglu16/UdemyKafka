@@ -7,8 +7,8 @@ using Kafka.Consumer;
 #endregion
 
 Console.WriteLine("Kafka Consumer 1");
-var kafkaService = new KafkaService();
 
-await kafkaService.Consume();
+var kafkaConsumerService = new KafkaConsumerService();
 
+kafkaConsumerService.ConsumeExactlyOnce();
 Console.ReadLine();
