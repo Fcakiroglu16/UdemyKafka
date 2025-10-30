@@ -1,50 +1,19 @@
-﻿# Avro Tools'u global tool olarak yükleyin
-dotnet tool install --global Apache.Avro.Tools --version 1.12.1
+﻿Exactly Once'in ilk katmanı, üretici (producer) tarafında başlar.
 
-# Kafka.Producer klasörüne gidin
-cd Kafka.Producer
+Problem: Bir producer mesajı broker'a gönderir. Broker mesajı başarıyla alır ve kaydeder, ancak producer'a göndereceği onay (ACK) mesajı ağdaki bir sorun nedeniyle producer'a ulaşmaz. Producer, mesajın ulaşıp ulaşmadığından emin olamaz ve (eğer retries > 0 olarak ayarlanmışsa) mesajı tekrar gönderir. Bu durum, broker'da aynı mesajın iki kez kaydedilmesine (duplicate) neden olur.
 
-# Avro schema'dan C# kodu üretin
-avrogen -s Schemas\OrderCreatedEvent.avsc .
+Çözüm: Producer konfigürasyonuna enable.idempotence = true ayarını eklemek.
 
+Nasıl Çalışır?
 
-//Stream Example
+Bu ayar etkinleştirildiğinde, Kafka producer'a benzersiz bir Producer ID (PID) atar.
 
-CREATE STREAM order_created_stream (
-    OrderId VARCHAR,
-    CustomerId VARCHAR,
-    Amount DOUBLE
-) WITH (
-    KAFKA_TOPIC='order-created-events',
-    VALUE_FORMAT='AVRO'
-);
+Producer, gönderdiği her mesaj grubuna (batch) artan bir Sıra Numarası (Sequence Number) ekler.
 
+Broker, her partisyon için (PID, Sıra Numarası) çiftini takip eder.
 
-SET 'auto.offset.reset' = 'earliest';
+Eğer broker, zaten işlediği bir sıra numarasına sahip bir mesaj alırsa (yukarıdaki hata senaryosunda olduğu gibi), bu mesajı "yinelenen" (duplicate) olarak kabul eder, log'a tekrar yazmaz ancak producer'a "başarılı" (ACK) onayı gönderir.
 
-CREATE STREAM high_value_orders AS
-SELECT *
-FROM order_created_stream
-WHERE Amount > 1000
-EMIT CHANGES;
+Önemli Not: enable.idempotence = true ayarını yaptığınızda, producer ayarları otomatik olarak acks = all (tüm replikaların onayı beklenir) ve retries = Integer.MAX_VALUE (süresiz yeniden deneme) olarak ayarlanır. Bu, dayanıklılığı artırır.
 
-
-
-
-DROP STREAM HIGH_VALUE_ORDERS;
-
-
-//Table Example
-
-CREATE TABLE customer_total_orders AS
-SELECT
-    CustomerId,
-    COUNT(*) AS OrderCount,
-    SUM(Amount) AS TotalAmount
-FROM order_created_stream
-GROUP BY CustomerId
-EMIT CHANGES;
-
-  
-
-
+Kısıtlama: Idempotent producer, yalnızca tek bir producer oturumu ve tek bir partisyon içinde tekrarı önler. Birden fazla partisyona atomik olarak yazmak için bir sonraki adıma ihtiyacımız var.

@@ -10,5 +10,7 @@ Console.WriteLine("Kafka Producer");
 
 
 var kafkaService = new KafkaService();
-await kafkaService.CreateTopicsWithDifferentPoliciesAsync();
+await kafkaService.SendMessageAtLeastOnce();
+kafkaService.SendMessageAtMostOnce();
+await kafkaService.SendMessageExactlyOnce();
 Console.ReadLine();
