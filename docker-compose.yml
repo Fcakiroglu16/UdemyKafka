@@ -3,7 +3,7 @@ version: "3.8"
 
 services:
   kafka:
-    image: docker.io/bitnami/kafka:3.7
+    image: docker.io/soldevelo/kafka:3.7
     ports:
       - "9094:9094"
     volumes:
